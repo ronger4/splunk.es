@@ -289,31 +289,32 @@ class ActionModule(ActionBase):
             # if the obtained values are different from 'deleted' state values
             if search_by_name and search_by_name != diff_cmp:
                 before.append(search_by_name)
-                payload = {
-                    "action.notable.param.default_owner": "",
-                    "action.notable.param.default_status": "",
-                    "action.notable.param.drilldown_name": "",
-                    "action.notable.param.drilldown_search": "",
-                    "action.notable.param.drilldown_earliest_offset": "$info_min_time$",
-                    "action.notable.param.drilldown_latest_offset": "$info_max_time$",
-                    "action.notable.param.extract_artifacts": "{}",
-                    "action.notable.param.investigation_profiles": "{}",
-                    "action.notable.param.next_steps": "",
-                    "action.notable.param.recommended_actions": "",
-                    "action.notable.param.rule_description": "",
-                    "action.notable.param.rule_title": "",
-                    "action.notable.param.security_domain": "",
-                    "action.notable.param.severity": "",
-                }
-                payload.update(self.create_metadata(metadata, mode="delete"))
-                url = "{0}/{1}".format(
-                    self.api_object,
-                    quote(want_conf["correlation_search_name"]),
-                )
-                conn_request.create_update(
-                    url,
-                    data=payload,
-                )
+                if not self._task.check_mode:
+                    payload = {
+                        "action.notable.param.default_owner": "",
+                        "action.notable.param.default_status": "",
+                        "action.notable.param.drilldown_name": "",
+                        "action.notable.param.drilldown_search": "",
+                        "action.notable.param.drilldown_earliest_offset": "$info_min_time$",
+                        "action.notable.param.drilldown_latest_offset": "$info_max_time$",
+                        "action.notable.param.extract_artifacts": "{}",
+                        "action.notable.param.investigation_profiles": "{}",
+                        "action.notable.param.next_steps": "",
+                        "action.notable.param.recommended_actions": "",
+                        "action.notable.param.rule_description": "",
+                        "action.notable.param.rule_title": "",
+                        "action.notable.param.security_domain": "",
+                        "action.notable.param.severity": "",
+                    }
+                    payload.update(self.create_metadata(metadata, mode="delete"))
+                    url = "{0}/{1}".format(
+                        self.api_object,
+                        quote(want_conf["correlation_search_name"]),
+                    )
+                    conn_request.create_update(
+                        url,
+                        data=payload,
+                    )
                 changed = True
                 after = []
 
@@ -392,72 +393,87 @@ class ActionModule(ActionBase):
 
                         changed = True
 
-                        payload = self.map_objects_to_params(
-                            metadata,
-                            want_conf,
-                        )
+                        if self._task.check_mode:
+                            # In check mode, return the expected configuration
+                            after.append(want_conf)
+                        else:
+                            payload = self.map_objects_to_params(
+                                metadata,
+                                want_conf,
+                            )
 
-                        url = "{0}/{1}".format(
-                            self.api_object,
-                            quote(correlation_search_name),
-                        )
-                        api_response = conn_request.create_update(
-                            url,
-                            data=payload,
-                        )
-                        response_json, metadata = self.map_params_to_object(
-                            api_response["entry"][0],
-                        )
+                            url = "{0}/{1}".format(
+                                self.api_object,
+                                quote(correlation_search_name),
+                            )
+                            api_response = conn_request.create_update(
+                                url,
+                                data=payload,
+                            )
+                            response_json, metadata = self.map_params_to_object(
+                                api_response["entry"][0],
+                            )
 
-                        after.append(response_json)
+                            after.append(response_json)
                     elif self._task.args["state"] == "replaced":
-                        self.delete_module_api_config(
-                            conn_request=conn_request,
-                            config=[want_conf],
-                        )
+                        if not self._task.check_mode:
+                            self.delete_module_api_config(
+                                conn_request=conn_request,
+                                config=[want_conf],
+                            )
                         changed = True
 
-                        payload = self.map_objects_to_params(
-                            metadata,
-                            want_conf,
-                        )
+                        if self._task.check_mode:
+                            # In check mode, return the expected configuration
+                            after.append(want_conf)
+                        else:
+                            payload = self.map_objects_to_params(
+                                metadata,
+                                want_conf,
+                            )
 
-                        url = "{0}/{1}".format(
-                            self.api_object,
-                            quote(correlation_search_name),
-                        )
-                        api_response = conn_request.create_update(
-                            url,
-                            data=payload,
-                        )
-                        response_json, metadata = self.map_params_to_object(
-                            api_response["entry"][0],
-                        )
+                            url = "{0}/{1}".format(
+                                self.api_object,
+                                quote(correlation_search_name),
+                            )
+                            api_response = conn_request.create_update(
+                                url,
+                                data=payload,
+                            )
+                            response_json, metadata = self.map_params_to_object(
+                                api_response["entry"][0],
+                            )
 
-                        after.append(response_json)
+                            after.append(response_json)
                 else:
                     before.append(have_conf)
                     after.append(have_conf)
             else:
                 changed = True
                 want_conf = utils.remove_empties(want_conf)
-                payload = self.map_objects_to_params(metadata, want_conf)
 
-                url = "{0}/{1}".format(
-                    self.api_object,
-                    quote(correlation_search_name),
-                )
-                api_response = conn_request.create_update(
-                    url,
-                    data=payload,
-                )
+                if self._task.check_mode:
+                    # In check mode, return the expected configuration
+                    after.extend(before)
+                    after.append(want_conf)
+                else:
+                    payload = self.map_objects_to_params(metadata, want_conf)
 
-                response_json, metadata = self.map_params_to_object(
-                    api_response["entry"][0],
-                )
+                    url = "{0}/{1}".format(
+                        self.api_object,
+                        quote(correlation_search_name),
+                    )
+                    api_response = conn_request.create_update(
+                        url,
+                        data=payload,
+                    )
 
-                after.extend(before)
-                after.append(response_json)
+                    response_json, metadata = self.map_params_to_object(
+                        api_response["entry"][0],
+                    )
+
+                    after.extend(before)
+                    after.append(response_json)
         if not changed:
             after = None
 
