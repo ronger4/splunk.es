@@ -224,13 +224,14 @@ class ActionModule(ActionBase):
 
             if search_by_name:
                 before.append(search_by_name)
-                url = "{0}/{1}".format(
-                    self.api_object,
-                    quote(want_conf["name"]),
-                )
-                conn_request.delete_by_path(
-                    url,
-                )
+                if not self._task.check_mode:
+                    url = "{0}/{1}".format(
+                        self.api_object,
+                        quote(want_conf["name"]),
+                    )
+                    conn_request.delete_by_path(
+                        url,
+                    )
                 changed = True
                 after = []
 
@@ -287,51 +288,60 @@ class ActionModule(ActionBase):
 
                         changed = True
 
-                        payload = self.map_objects_to_params(want_conf)
+                        if self._task.check_mode:
+                            # In check mode, return the expected config
+                            after.append(want_conf)
+                        else:
+                            payload = self.map_objects_to_params(want_conf)
 
-                        url = "{0}/{1}".format(
-                            self.api_object,
-                            quote(name),
-                        )
-                        api_response = conn_request.create_update(
-                            url,
-                            data=payload,
-                        )
-                        response_json = self.map_params_to_object(
-                            api_response["entry"][0],
-                        )
-
-                        after.append(response_json)
-                    elif self._task.args["state"] == "replaced":
-                        self.delete_module_api_config(
-                            conn_request=conn_request,
-                            config=[want_conf],
-                        )
-                        changed = True
-
-                        payload = self.map_objects_to_params(want_conf)
-
-                        url = "{0}/{1}".format(
-                            self.api_object,
-                            quote(name),
-                        )
-
-                        # while creating new correlation search, this is how to set the 'app' field
-                        if "app" in want_conf:
-                            url = url.replace(
-                                "SplunkEnterpriseSecuritySuite",
-                                want_conf["app"],
+                            url = "{0}/{1}".format(
+                                self.api_object,
+                                quote(name),
+                            )
+                            api_response = conn_request.create_update(
+                                url,
+                                data=payload,
+                            )
+                            response_json = self.map_params_to_object(
+                                api_response["entry"][0],
                             )
 
-                        api_response = conn_request.create_update(
-                            url,
-                            data=payload,
-                        )
-                        response_json = self.map_params_to_object(
-                            api_response["entry"][0],
-                        )
+                            after.append(response_json)
+                    elif self._task.args["state"] == "replaced":
+                        if not self._task.check_mode:
+                            self.delete_module_api_config(
+                                conn_request=conn_request,
+                                config=[want_conf],
+                            )
+                        changed = True
 
-                        after.append(response_json)
+                        if self._task.check_mode:
+                            # In check mode, return the expected configuration
+                            after.append(want_conf)
+                        else:
+                            payload = self.map_objects_to_params(want_conf)
+
+                            url = "{0}/{1}".format(
+                                self.api_object,
+                                quote(name),
+                            )
+
+                            # while creating new correlation search, this is how to set the 'app' field
+                            if "app" in want_conf:
+                                url = url.replace(
+                                    "SplunkEnterpriseSecuritySuite",
+                                    want_conf["app"],
+                                )
+
+                            api_response = conn_request.create_update(
+                                url,
+                                data=payload,
+                            )
+                            response_json = self.map_params_to_object(
+                                api_response["entry"][0],
+                            )
+
+                            after.append(response_json)
                 else:
                     before.append(have_conf)
                     after.append(have_conf)
@@ -339,30 +349,36 @@ class ActionModule(ActionBase):
                 changed = True
                 want_conf = utils.remove_empties(want_conf)
                 name = want_conf["name"]
-                payload = self.map_objects_to_params(want_conf)
 
-                url = "{0}/{1}".format(
-                    self.api_object,
-                    quote(name),
-                )
+                if self._task.check_mode:
+                    # In check mode, return the expected configuration
+                    after.extend(before)
+                    after.append(want_conf)
+                else:
+                    payload = self.map_objects_to_params(want_conf)
 
-                # while creating new correlation search, this is how to set the 'app' field
-                if "app" in want_conf:
-                    url = url.replace(
-                        "SplunkEnterpriseSecuritySuite",
-                        want_conf["app"],
+                    url = "{0}/{1}".format(
+                        self.api_object,
+                        quote(name),
                     )
 
-                api_response = conn_request.create_update(
-                    url,
-                    data=payload,
-                )
-                response_json = self.map_params_to_object(
-                    api_response["entry"][0],
-                )
+                    # while creating new correlation search, this is how to set the 'app' field
+                    if "app" in want_conf:
+                        url = url.replace(
+                            "SplunkEnterpriseSecuritySuite",
+                            want_conf["app"],
+                        )
 
-                after.extend(before)
-                after.append(response_json)
+                    api_response = conn_request.create_update(
+                        url,
+                        data=payload,
+                    )
+                    response_json = self.map_params_to_object(
+                        api_response["entry"][0],
+                    )
+
+                    after.extend(before)
+                    after.append(response_json)
         if not changed:
             after = None
 
