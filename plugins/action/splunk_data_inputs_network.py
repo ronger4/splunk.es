@@ -35,8 +35,8 @@ from ansible_collections.ansible.utils.plugins.module_utils.common.argspec_valid
     AnsibleArgSpecValidator,
 )
 
-from ansible_collections.splunk.es.plugins.module_utils.splunk import (
-    SplunkRequest,
+from ansible_collections.splunk.es.plugins.module_utils.splunk import SplunkRequest
+from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     map_obj_to_params,
     map_params_to_obj,
     remove_get_keys_from_payload_dict,
@@ -305,13 +305,14 @@ class ActionModule(ActionBase):
 
             if have_conf:
                 before.append(have_conf)
-                self.request_by_path(
-                    conn_request,
-                    protocol,
-                    datatype,
-                    name,
-                    req_type="delete",
-                )
+                if not self._task.check_mode:
+                    self.request_by_path(
+                        conn_request,
+                        protocol,
+                        datatype,
+                        name,
+                        req_type="delete",
+                    )
                 changed = True
                 after = []
 
@@ -371,66 +372,84 @@ class ActionModule(ActionBase):
                             )
                             changed = True
 
-                            payload = map_obj_to_params(
-                                want_conf,
-                                self.key_transform,
-                            )
-                            api_response = self.request_by_path(
-                                conn_request,
-                                protocol,
-                                datatype,
-                                name,
-                                req_type="post_update",
-                                payload=payload,
-                            )
-                            response_json = self.map_params_to_object(
-                                api_response["entry"][0],
-                                datatype,
-                            )
+                            if self._task.check_mode:
+                                # In check mode, return the expected configuration
+                                # Adding back protocol and datatype fields for better clarity
+                                want_conf["protocol"] = protocol
+                                if datatype:
+                                    want_conf["datatype"] = datatype
+                                after.append(want_conf)
+                            else:
+                                payload = map_obj_to_params(
+                                    want_conf,
+                                    self.key_transform,
+                                )
+                                api_response = self.request_by_path(
+                                    conn_request,
+                                    protocol,
+                                    datatype,
+                                    name,
+                                    req_type="post_update",
+                                    payload=payload,
+                                )
+                                response_json = self.map_params_to_object(
+                                    api_response["entry"][0],
+                                    datatype,
+                                )
 
-                            # Adding back protocol and datatype fields for better clarity
-                            response_json["protocol"] = protocol
-                            if datatype:
-                                response_json["datatype"] = datatype
+                                # Adding back protocol and datatype fields for better clarity
+                                response_json["protocol"] = protocol
+                                if datatype:
+                                    response_json["datatype"] = datatype
 
-                            after.append(response_json)
+                                after.append(response_json)
                         elif self._task.args["state"] == "replaced":
-                            api_response = self.request_by_path(
-                                conn_request,
-                                protocol,
-                                datatype,
-                                name,
-                                req_type="delete",
-                            )
+                            if not self._task.check_mode:
+                                self.request_by_path(
+                                    conn_request,
+                                    protocol,
+                                    datatype,
+                                    name,
+                                    req_type="delete",
+                                )
 
                             changed = True
-                            payload = map_obj_to_params(
-                                want_conf,
-                                self.key_transform,
-                            )
-                            # while creating new conf, we need to only use numerical values
-                            # splunk will later append param value to it.
-                            payload["name"] = old_name
 
-                            api_response = self.request_by_path(
-                                conn_request,
-                                protocol,
-                                datatype,
-                                name,
-                                req_type="post_create",
-                                payload=payload,
-                            )
-                            response_json = self.map_params_to_object(
-                                api_response["entry"][0],
-                                datatype,
-                            )
+                            if self._task.check_mode:
+                                # In check mode, return the expected configuration
+                                # Adding back protocol and datatype fields for better clarity
+                                want_conf["protocol"] = protocol
+                                if datatype:
+                                    want_conf["datatype"] = datatype
+                                after.append(want_conf)
+                            else:
+                                payload = map_obj_to_params(
+                                    want_conf,
+                                    self.key_transform,
+                                )
+                                # while creating new conf, we need to only use numerical values
+                                # splunk will later append param value to it.
+                                payload["name"] = old_name
 
-                            # Adding back protocol and datatype fields for better clarity
-                            response_json["protocol"] = protocol
-                            if datatype:
-                                response_json["datatype"] = datatype
+                                api_response = self.request_by_path(
+                                    conn_request,
+                                    protocol,
+                                    datatype,
+                                    name,
+                                    req_type="post_create",
+                                    payload=payload,
+                                )
+                                response_json = self.map_params_to_object(
+                                    api_response["entry"][0],
+                                    datatype,
+                                )
 
-                            after.append(response_json)
+                                # Adding back protocol and datatype fields for better clarity
+                                response_json["protocol"] = protocol
+                                if datatype:
+                                    response_json["datatype"] = datatype
+
+                                after.append(response_json)
                     else:
                         before.append(have_conf)
                         after.append(have_conf)
@@ -441,28 +460,37 @@ class ActionModule(ActionBase):
                 changed = True
                 want_conf = utils.remove_empties(want_conf)
 
-                payload = map_obj_to_params(want_conf, self.key_transform)
+                if self._task.check_mode:
+                    # In check mode, return the expected configuration
+                    # Adding back protocol and datatype fields for better clarity
+                    want_conf["protocol"] = protocol
+                    if datatype:
+                        want_conf["datatype"] = datatype
+                    after.extend(before)
+                    after.append(want_conf)
+                else:
+                    payload = map_obj_to_params(want_conf, self.key_transform)
 
-                api_response = self.request_by_path(
-                    conn_request,
-                    protocol,
-                    datatype,
-                    name,
-                    req_type="post_create",
-                    payload=payload,
-                )
-                response_json = self.map_params_to_object(
-                    api_response["entry"][0],
-                    datatype,
-                )
+                    api_response = self.request_by_path(
+                        conn_request,
+                        protocol,
+                        datatype,
+                        name,
+                        req_type="post_create",
+                        payload=payload,
+                    )
+                    response_json = self.map_params_to_object(
+                        api_response["entry"][0],
+                        datatype,
+                    )
 
-                # Adding back protocol and datatype fields for better clarity
-                response_json["protocol"] = protocol
-                if datatype:
-                    response_json["datatype"] = datatype
+                    # Adding back protocol and datatype fields for better clarity
+                    response_json["protocol"] = protocol
+                    if datatype:
+                        response_json["datatype"] = datatype
 
-                after.extend(before)
-                after.append(response_json)
+                    after.extend(before)
+                    after.append(response_json)
         if not changed:
             after = None
 

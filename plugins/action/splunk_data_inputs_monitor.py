@@ -34,8 +34,8 @@ from ansible_collections.ansible.utils.plugins.module_utils.common.argspec_valid
     AnsibleArgSpecValidator,
 )
 
-from ansible_collections.splunk.es.plugins.module_utils.splunk import (
-    SplunkRequest,
+from ansible_collections.splunk.es.plugins.module_utils.splunk import SplunkRequest
+from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     map_obj_to_params,
     map_params_to_obj,
     remove_get_keys_from_payload_dict,
@@ -120,12 +120,13 @@ class ActionModule(ActionBase):
             )
             if search_by_name:
                 before.append(search_by_name)
-                conn_request.delete_by_path(
-                    "{0}/{1}".format(
-                        self.api_object,
-                        quote_plus(want_conf["name"]),
-                    ),
-                )
+                if not self._task.check_mode:
+                    conn_request.delete_by_path(
+                        "{0}/{1}".format(
+                            self.api_object,
+                            quote_plus(want_conf["name"]),
+                        ),
+                    )
                 changed = True
                 after = []
 
@@ -188,46 +189,55 @@ class ActionModule(ActionBase):
                             )
                             changed = True
 
-                            payload = map_obj_to_params(
-                                want_conf,
-                                self.key_transform,
-                            )
-                            url = "{0}/{1}".format(
-                                self.api_object,
-                                quote_plus(payload.pop("name")),
-                            )
-                            api_response = conn_request.create_update(
-                                url,
-                                data=payload,
-                            )
-                            response_json = self.map_params_to_object(
-                                api_response["entry"][0],
-                            )
-
-                            after.append(response_json)
-                        elif self._task.args["state"] == "replaced":
-                            conn_request.delete_by_path(
-                                "{0}/{1}".format(
+                            if self._task.check_mode:
+                                # In check mode, return the expected configuration
+                                after.append(want_conf)
+                            else:
+                                payload = map_obj_to_params(
+                                    want_conf,
+                                    self.key_transform,
+                                )
+                                url = "{0}/{1}".format(
                                     self.api_object,
-                                    quote_plus(want_conf["name"]),
-                                ),
-                            )
+                                    quote_plus(payload.pop("name")),
+                                )
+                                api_response = conn_request.create_update(
+                                    url,
+                                    data=payload,
+                                )
+                                response_json = self.map_params_to_object(
+                                    api_response["entry"][0],
+                                )
+
+                                after.append(response_json)
+                        elif self._task.args["state"] == "replaced":
+                            if not self._task.check_mode:
+                                conn_request.delete_by_path(
+                                    "{0}/{1}".format(
+                                        self.api_object,
+                                        quote_plus(want_conf["name"]),
+                                    ),
+                                )
                             changed = True
 
-                            payload = map_obj_to_params(
-                                want_conf,
-                                self.key_transform,
-                            )
-                            url = "{0}".format(self.api_object)
-                            api_response = conn_request.create_update(
-                                url,
-                                data=payload,
-                            )
-                            response_json = self.map_params_to_object(
-                                api_response["entry"][0],
-                            )
+                            if self._task.check_mode:
+                                # In check mode, return the expected configuration
+                                after.append(want_conf)
+                            else:
+                                payload = map_obj_to_params(
+                                    want_conf,
+                                    self.key_transform,
+                                )
+                                url = "{0}".format(self.api_object)
+                                api_response = conn_request.create_update(
+                                    url,
+                                    data=payload,
+                                )
+                                response_json = self.map_params_to_object(
+                                    api_response["entry"][0],
+                                )
 
-                            after.append(response_json)
+                                after.append(response_json)
                     else:
                         before.append(have_conf)
                         after.append(have_conf)
@@ -238,18 +248,23 @@ class ActionModule(ActionBase):
                 changed = True
                 want_conf = utils.remove_empties(want_conf)
 
-                payload = map_obj_to_params(want_conf, self.key_transform)
-                url = "{0}".format(self.api_object)
-                api_response = conn_request.create_update(
-                    url,
-                    data=payload,
-                )
-                response_json = self.map_params_to_object(
-                    api_response["entry"][0],
-                )
+                if self._task.check_mode:
+                    # In check mode, return the expected configuration
+                    after.extend(before)
+                    after.append(want_conf)
+                else:
+                    payload = map_obj_to_params(want_conf, self.key_transform)
+                    url = "{0}".format(self.api_object)
+                    api_response = conn_request.create_update(
+                        url,
+                        data=payload,
+                    )
+                    response_json = self.map_params_to_object(
+                        api_response["entry"][0],
+                    )
 
-                after.extend(before)
-                after.append(response_json)
+                    after.extend(before)
+                    after.append(response_json)
         if not changed:
             after = None
 

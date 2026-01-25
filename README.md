@@ -58,6 +58,12 @@ Name | Description
 [splunk.es.splunk_correlation_searches](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_correlation_searches_module.rst)|Splunk Enterprise Security Correlation searches resource module
 [splunk.es.splunk_data_inputs_monitor](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_data_inputs_monitor_module.rst)|Splunk Data Inputs of type Monitor resource module
 [splunk.es.splunk_data_inputs_network](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_data_inputs_network_module.rst)|Manage Splunk Data Inputs of type TCP or UDP resource module
+[splunk.es.splunk_finding](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_finding_module.rst)|Manage Splunk Enterprise Security findings
+[splunk.es.splunk_finding_info](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_finding_info_module.rst)|Gather information about Splunk Enterprise Security Findings
+[splunk.es.splunk_investigation](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_investigation_module.rst)|Manage Splunk Enterprise Security investigations
+[splunk.es.splunk_investigation_info](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_investigation_info_module.rst)|Gather information about Splunk Enterprise Security Investigations
+[splunk.es.splunk_response_plan](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_response_plan_module.rst)|Manage Splunk Enterprise Security response plans
+[splunk.es.splunk_response_plan_info](https://github.com/ansible-collections/splunk.es/blob/main/docs/splunk.es.splunk_response_plan_info_module.rst)|Gather information about Splunk Enterprise Security response plans
 
 <!--end collection content-->
 
