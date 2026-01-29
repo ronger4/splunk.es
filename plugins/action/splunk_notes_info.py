@@ -15,10 +15,13 @@ from ansible.utils.display import Display
 
 from ansible_collections.splunk.es.plugins.module_utils.finding import extract_notable_time
 from ansible_collections.splunk.es.plugins.module_utils.notes import (
+    TARGET_FINDING,
+    TARGET_RESPONSE_PLAN_TASK,
     build_notes_api_path,
     build_task_note_api_path,
     build_task_notes_api_path,
     map_note_from_api,
+    validate_target_params,
 )
 from ansible_collections.splunk.es.plugins.module_utils.splunk import (
     SplunkRequest,
@@ -41,11 +44,6 @@ DEFAULT_NOTES_LIMIT = 100
 
 class ActionModule(ActionBase):
     """Action module for querying Splunk ES notes."""
-
-    # Target types
-    TARGET_FINDING = "finding"
-    TARGET_INVESTIGATION = "investigation"
-    TARGET_RESPONSE_PLAN_TASK = "response_plan_task"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -76,41 +74,6 @@ class ActionModule(ActionBase):
             f"namespace={self.api_namespace}, user={self.api_user}, app={self.api_app}",
         )
 
-    def _validate_target_params(self, target_type: str) -> str | None:
-        """Validate required parameters based on target type.
-
-        Args:
-            target_type: The target type (finding, investigation, response_plan_task).
-
-        Returns:
-            Error message if validation fails, None if valid.
-        """
-        if target_type == self.TARGET_FINDING:
-            if not self._task.args.get("finding_ref_id"):
-                return "Missing required parameter 'finding_ref_id' for target_type 'finding'"
-
-        elif target_type == self.TARGET_INVESTIGATION:
-            if not self._task.args.get("investigation_ref_id"):
-                return "Missing required parameter 'investigation_ref_id' for target_type 'investigation'"
-
-        elif target_type == self.TARGET_RESPONSE_PLAN_TASK:
-            missing = []
-            if not self._task.args.get("investigation_ref_id"):
-                missing.append("investigation_ref_id")
-            if not self._task.args.get("response_plan_id"):
-                missing.append("response_plan_id")
-            if not self._task.args.get("phase_id"):
-                missing.append("phase_id")
-            if not self._task.args.get("task_id"):
-                missing.append("task_id")
-            if missing:
-                return (
-                    f"Missing required parameters for target_type 'response_plan_task': "
-                    f"{', '.join(missing)}"
-                )
-
-        return None
-
     def _build_notes_path(self, target_type: str) -> str:
         """Build the notes API path based on target type.
 
@@ -120,7 +83,7 @@ class ActionModule(ActionBase):
         Returns:
             The API path for notes.
         """
-        if target_type == self.TARGET_RESPONSE_PLAN_TASK:
+        if target_type == TARGET_RESPONSE_PLAN_TASK:
             return build_task_notes_api_path(
                 investigation_id=self._task.args.get("investigation_ref_id"),
                 response_plan_id=self._task.args.get("response_plan_id"),
@@ -132,7 +95,7 @@ class ActionModule(ActionBase):
             )
 
         # For finding or investigation
-        if target_type == self.TARGET_FINDING:
+        if target_type == TARGET_FINDING:
             investigation_id = quote(self._task.args.get("finding_ref_id"), safe="")
         else:
             investigation_id = self._task.args.get("investigation_ref_id")
@@ -181,7 +144,7 @@ class ActionModule(ActionBase):
         query_params: dict[str, Any] = {}
 
         # Add notable_time for findings
-        if target_type == self.TARGET_FINDING:
+        if target_type == TARGET_FINDING:
             finding_ref_id = self._task.args.get("finding_ref_id")
             notable_time = extract_notable_time(finding_ref_id)
             if notable_time:
@@ -321,7 +284,7 @@ class ActionModule(ActionBase):
         display.vv(f"splunk_notes_info: note_id: {note_id}")
 
         # Validate target-specific parameters
-        error = self._validate_target_params(target_type)
+        error = validate_target_params(target_type, self._task.args)
         if error:
             self._result["failed"] = True
             self._result["msg"] = error
@@ -353,7 +316,7 @@ class ActionModule(ActionBase):
                 # Query specific note by ID
                 display.v(f"splunk_notes_info: querying note by id: {note_id}")
 
-                if target_type == self.TARGET_RESPONSE_PLAN_TASK:
+                if target_type == TARGET_RESPONSE_PLAN_TASK:
                     # Response plan tasks support direct note lookup
                     note = self._get_task_note_direct(conn_request, note_id)
                 else:

@@ -37,6 +37,7 @@ from ansible_collections.splunk.es.plugins.module_utils.notes import (
     build_task_notes_api_path,
     map_note_from_api,
     map_note_to_api,
+    validate_target_params,
 )
 from ansible_collections.splunk.es.plugins.module_utils.splunk import SplunkRequest
 
@@ -764,56 +765,56 @@ class TestEsNotesHelperMethods:
 
     def test_validate_target_params_finding_valid(self):
         """Test validation passes for finding with finding_ref_id."""
-        self._plugin._task.args = {"finding_ref_id": FINDING_REF_ID}
+        args = {"finding_ref_id": FINDING_REF_ID}
 
-        result = self._plugin._validate_target_params("finding")
+        result = validate_target_params("finding", args)
 
         assert result is None
 
     def test_validate_target_params_finding_missing_finding_ref_id(self):
         """Test validation fails for finding without finding_ref_id."""
-        self._plugin._task.args = {}
+        args = {}
 
-        result = self._plugin._validate_target_params("finding")
+        result = validate_target_params("finding", args)
 
         assert result is not None
         assert "finding_ref_id" in result
 
     def test_validate_target_params_investigation_valid(self):
         """Test validation passes for investigation with investigation_ref_id."""
-        self._plugin._task.args = {"investigation_ref_id": INVESTIGATION_UUID}
+        args = {"investigation_ref_id": INVESTIGATION_UUID}
 
-        result = self._plugin._validate_target_params("investigation")
+        result = validate_target_params("investigation", args)
 
         assert result is None
 
     def test_validate_target_params_investigation_missing_ref_id(self):
         """Test validation fails for investigation without investigation_ref_id."""
-        self._plugin._task.args = {}
+        args = {}
 
-        result = self._plugin._validate_target_params("investigation")
+        result = validate_target_params("investigation", args)
 
         assert result is not None
         assert "investigation_ref_id" in result
 
     def test_validate_target_params_response_plan_task_valid(self):
         """Test validation passes for response_plan_task with all required params."""
-        self._plugin._task.args = {
+        args = {
             "investigation_ref_id": INVESTIGATION_UUID,
             "response_plan_id": RESPONSE_PLAN_UUID,
             "phase_id": PHASE_UUID,
             "task_id": TASK_UUID,
         }
 
-        result = self._plugin._validate_target_params("response_plan_task")
+        result = validate_target_params("response_plan_task", args)
 
         assert result is None
 
     def test_validate_target_params_response_plan_task_missing_params(self):
         """Test validation fails for response_plan_task with missing params."""
-        self._plugin._task.args = {"investigation_ref_id": INVESTIGATION_UUID}
+        args = {"investigation_ref_id": INVESTIGATION_UUID}
 
-        result = self._plugin._validate_target_params("response_plan_task")
+        result = validate_target_params("response_plan_task", args)
 
         assert result is not None
         assert "response_plan_id" in result

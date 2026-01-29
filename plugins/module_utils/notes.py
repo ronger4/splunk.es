@@ -22,6 +22,43 @@ from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
 )
 
 
+# Target type constants
+TARGET_FINDING = "finding"
+TARGET_INVESTIGATION = "investigation"
+TARGET_RESPONSE_PLAN_TASK = "response_plan_task"
+
+# Required parameters for each target type
+TARGET_REQUIRED_PARAMS: dict[str, list[str]] = {
+    TARGET_FINDING: ["finding_ref_id"],
+    TARGET_INVESTIGATION: ["investigation_ref_id"],
+    TARGET_RESPONSE_PLAN_TASK: [
+        "investigation_ref_id",
+        "response_plan_id",
+        "phase_id",
+        "task_id",
+    ],
+}
+
+
+def validate_target_params(target_type: str, args: dict[str, Any]) -> str | None:
+    """Validate required parameters based on target type.
+
+    Args:
+        target_type: The target type (finding, investigation, response_plan_task).
+        args: The task arguments dictionary.
+
+    Returns:
+        Error message if validation fails, None if valid.
+    """
+    required_params = TARGET_REQUIRED_PARAMS.get(target_type, [])
+    missing = [param for param in required_params if not args.get(param)]
+
+    if not missing:
+        return None
+
+    return f"Missing required parameters for target_type '{target_type}': {', '.join(missing)}"
+
+
 def build_notes_api_path(
     investigation_id: str,
     namespace: str = DEFAULT_API_NAMESPACE,
