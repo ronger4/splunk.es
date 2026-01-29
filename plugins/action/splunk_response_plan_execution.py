@@ -21,7 +21,7 @@
 The action module for splunk_response_plan_execution
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
@@ -39,6 +39,7 @@ from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     DEFAULT_API_APP,
     DEFAULT_API_NAMESPACE,
     DEFAULT_API_USER,
+    get_api_config_from_args,
     is_uuid,
 )
 from ansible_collections.splunk.es.plugins.modules.splunk_response_plan_execution import (
@@ -83,12 +84,8 @@ class ActionModule(ActionBase):
 
     def _configure_api(self) -> None:
         """Configure API path components from task arguments."""
-        self.api_namespace = self._task.args.get("api_namespace", DEFAULT_API_NAMESPACE)
-        self.api_user = self._task.args.get("api_user", DEFAULT_API_USER)
-        self.api_app = self._task.args.get("api_app", DEFAULT_API_APP)
-        display.vv(
-            f"splunk_response_plan_execution: API config - "
-            f"namespace={self.api_namespace}, user={self.api_user}, app={self.api_app}",
+        self.api_namespace, self.api_user, self.api_app = get_api_config_from_args(
+            self._task.args,
         )
 
     def _build_response_plans_path(self, investigation_id: str) -> str:
@@ -150,7 +147,7 @@ class ActionModule(ActionBase):
         self,
         phases: list[dict[str, Any]],
         phase_name: str,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Find a phase by name within a list of phases.
 
         Args:
@@ -169,7 +166,7 @@ class ActionModule(ActionBase):
         self,
         tasks: list[dict[str, Any]],
         task_name: str,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Find a task by name within a list of tasks.
 
         Args:
@@ -206,7 +203,7 @@ class ActionModule(ActionBase):
         self,
         templates: list[dict[str, Any]],
         template_id: str,
-    ) -> str | None:
+    ) -> Optional[str]:
         """Look up a response plan template name by its ID.
 
         Args:
@@ -225,7 +222,7 @@ class ActionModule(ActionBase):
         self,
         templates: list[dict[str, Any]],
         template_name: str,
-    ) -> str | None:
+    ) -> Optional[str]:
         """Look up a response plan template ID by its name.
 
         Args:
@@ -274,7 +271,7 @@ class ActionModule(ActionBase):
         self,
         applied_plans: list[dict[str, Any]],
         plan_name: str,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Find an applied response plan by its name.
 
         Note: The GET /v1/incidents/{id} response doesn't include source_template_id
@@ -348,8 +345,8 @@ class ActionModule(ActionBase):
         applied_plan_id: str,
         phase_id: str,
         task_id: str,
-        status: str | None,
-        owner: str | None,
+        status: Optional[str],
+        owner: Optional[str],
     ) -> dict[str, Any]:
         """Update a task's status and/or owner.
 
@@ -572,7 +569,7 @@ class ActionModule(ActionBase):
 
     def _build_before_state(
         self,
-        existing_plan: dict[str, Any] | None,
+        existing_plan: Optional[dict[str, Any]],
         template_id: str,
     ) -> dict[str, Any]:
         """Build the before state for result output.
@@ -613,7 +610,7 @@ class ActionModule(ActionBase):
         conn_request: SplunkRequest,
         investigation_id: str,
         template_name: str,
-        tasks_config: list[dict[str, Any]] | None,
+        tasks_config: Optional[list[dict[str, Any]]],
         plan_changed: bool,
     ) -> tuple[list[dict[str, Any]], bool]:
         """Process task updates if task configuration is provided.
@@ -652,7 +649,7 @@ class ActionModule(ActionBase):
         investigation_id: str,
         template_id: str,
         template_name: str,
-        tasks_config: list[dict[str, Any]] | None,
+        tasks_config: Optional[list[dict[str, Any]]],
     ) -> None:
         """Handle state=present operation.
 

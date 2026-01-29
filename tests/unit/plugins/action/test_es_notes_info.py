@@ -463,7 +463,7 @@ class TestEsNotesInfo:
         def get_by_path(self, path, query_params=None):
             raise Exception(
                 "Splunk httpapi returned error 500 with message "
-                "{'code': 'MC_0050', 'message': 'Internal server error'}"
+                "{'code': 'MC_0050', 'message': 'Internal server error'}",
             )
 
         monkeypatch.setattr(SplunkRequest, "get_by_path", get_by_path)

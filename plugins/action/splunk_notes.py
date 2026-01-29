@@ -21,7 +21,7 @@
 The action module for splunk_notes
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
@@ -49,6 +49,7 @@ from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     DEFAULT_API_APP,
     DEFAULT_API_NAMESPACE,
     DEFAULT_API_USER,
+    get_api_config_from_args,
 )
 from ansible_collections.splunk.es.plugins.modules.splunk_notes import DOCUMENTATION
 
@@ -82,15 +83,11 @@ class ActionModule(ActionBase):
 
     def _configure_api(self) -> None:
         """Configure API path components from task arguments."""
-        self.api_namespace = self._task.args.get("api_namespace", DEFAULT_API_NAMESPACE)
-        self.api_user = self._task.args.get("api_user", DEFAULT_API_USER)
-        self.api_app = self._task.args.get("api_app", DEFAULT_API_APP)
-        display.vv(
-            f"splunk_notes: API config - "
-            f"namespace={self.api_namespace}, user={self.api_user}, app={self.api_app}",
+        self.api_namespace, self.api_user, self.api_app = get_api_config_from_args(
+            self._task.args,
         )
 
-    def _validate_state_params(self, state: str, note_id: str | None) -> str | None:
+    def _validate_state_params(self, state: str, note_id: Optional[str]) -> Optional[str]:
         """Validate parameters based on state.
 
         Args:
@@ -486,7 +483,7 @@ class ActionModule(ActionBase):
         self,
         conn_request: SplunkRequest,
         target_type: str,
-        note_id: str | None,
+        note_id: Optional[str],
         note: dict[str, Any],
     ) -> None:
         """Handle state=present operation.

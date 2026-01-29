@@ -31,6 +31,7 @@ from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     DEFAULT_API_APP,
     DEFAULT_API_NAMESPACE,
     DEFAULT_API_USER,
+    get_api_config_from_args,
 )
 from ansible_collections.splunk.es.plugins.modules.splunk_notes_info import DOCUMENTATION
 
@@ -66,12 +67,8 @@ class ActionModule(ActionBase):
 
     def _configure_api(self) -> None:
         """Configure API path components from task arguments."""
-        self.api_namespace = self._task.args.get("api_namespace", DEFAULT_API_NAMESPACE)
-        self.api_user = self._task.args.get("api_user", DEFAULT_API_USER)
-        self.api_app = self._task.args.get("api_app", DEFAULT_API_APP)
-        display.vv(
-            f"splunk_notes_info: API config - "
-            f"namespace={self.api_namespace}, user={self.api_user}, app={self.api_app}",
+        self.api_namespace, self.api_user, self.api_app = get_api_config_from_args(
+            self._task.args,
         )
 
     def _build_notes_path(self, target_type: str) -> str:
@@ -149,7 +146,7 @@ class ActionModule(ActionBase):
             notable_time = extract_notable_time(finding_ref_id)
             if notable_time:
                 display.vvv(
-                    f"splunk_notes_info: using notable_time={notable_time} from finding_ref_id"
+                    f"splunk_notes_info: using notable_time={notable_time} from finding_ref_id",
                 )
                 query_params["notable_time"] = notable_time
 
@@ -270,7 +267,7 @@ class ActionModule(ActionBase):
         # Validate arguments
         if not check_argspec(self, self._result, DOCUMENTATION):
             display.v(
-                f"splunk_notes_info: argument validation failed: {self._result.get('msg')}"
+                f"splunk_notes_info: argument validation failed: {self._result.get('msg')}",
             )
             return self._result
 
@@ -339,9 +336,7 @@ class ActionModule(ActionBase):
             # Handle resource not found gracefully - return empty list
             # Splunk may return 404, or 500 with MC_0050 for non-existent resources
             is_not_found = (
-                "404" in error_msg
-                or "not found" in error_msg.lower()
-                or "MC_0050" in error_msg
+                "404" in error_msg or "not found" in error_msg.lower() or "MC_0050" in error_msg
             )
             if is_not_found:
                 self._result["changed"] = False

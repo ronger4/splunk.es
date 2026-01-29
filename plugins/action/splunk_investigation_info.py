@@ -5,7 +5,7 @@
 The action plugin file for splunk_investigation_info
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
@@ -66,7 +66,7 @@ class ActionModule(ActionBase):
         """
         return build_investigation_api_path(self.api_namespace, self.api_user, self.api_app)
 
-    def _build_query_params(self) -> dict[str, Any] | None:
+    def _build_query_params(self) -> Optional[dict[str, Any]]:
         """Build query params dict with create_time_min/create_time_max/limit if provided.
 
         Returns:

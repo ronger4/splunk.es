@@ -13,7 +13,7 @@ Pure Python functions with no Ansible dependencies for easy unit testing.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
     DEFAULT_API_APP,
@@ -40,7 +40,7 @@ TARGET_REQUIRED_PARAMS: dict[str, list[str]] = {
 }
 
 
-def validate_target_params(target_type: str, args: dict[str, Any]) -> str | None:
+def validate_target_params(target_type: str, args: dict[str, Any]) -> Optional[str]:
     """Validate required parameters based on target type.
 
     Args:

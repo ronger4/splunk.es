@@ -87,7 +87,9 @@ class TestNotesModuleUtils:
         """Test building notes path with default values."""
         result = build_notes_api_path(INVESTIGATION_UUID)
 
-        expected = f"servicesNS/nobody/missioncontrol/public/v2/investigations/{INVESTIGATION_UUID}/notes"
+        expected = (
+            f"servicesNS/nobody/missioncontrol/public/v2/investigations/{INVESTIGATION_UUID}/notes"
+        )
         assert result == expected
 
     def test_build_notes_api_path_custom(self):
@@ -99,7 +101,9 @@ class TestNotesModuleUtils:
             app="CustomApp",
         )
 
-        expected = f"customNS/customuser/CustomApp/public/v2/investigations/{INVESTIGATION_UUID}/notes"
+        expected = (
+            f"customNS/customuser/CustomApp/public/v2/investigations/{INVESTIGATION_UUID}/notes"
+        )
         assert result == expected
 
     def test_build_note_api_path_defaults(self):
