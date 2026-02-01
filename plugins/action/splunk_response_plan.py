@@ -23,7 +23,7 @@ The action module for splunk_response_plan
 
 import uuid
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
@@ -96,7 +96,7 @@ def _build_response_plan_update_path(
 def _find_task_id_by_name(
     existing_tasks: list[dict[str, Any]],
     task_name: str,
-) -> str | None:
+) -> Optional[str]:
     """Find existing task ID by name within a phase.
 
     Args:
@@ -131,7 +131,7 @@ def _build_search_payload(search: dict[str, Any]) -> dict[str, Any]:
 def _build_task_payload(
     task: dict[str, Any],
     order: int,
-    existing_id: str | None = None,
+    existing_id: Optional[str] = None,
 ) -> dict[str, Any]:
     """Build single task payload for API.
 
@@ -177,7 +177,7 @@ def _build_task_payload(
 def _build_phase_payload(
     phase: dict[str, Any],
     order: int,
-    existing_phase: dict[str, Any] | None = None,
+    existing_phase: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Build single phase payload for API.
 
@@ -215,7 +215,7 @@ def _build_phase_payload(
 
 def _map_response_plan_to_api(
     response_plan: dict[str, Any],
-    existing_response_plan: dict[str, Any] | None = None,
+    existing_response_plan: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Convert module params to API payload format.
 
@@ -490,7 +490,7 @@ class ActionModule(ActionBase):
         self,
         conn_request: SplunkRequest,
         name: str,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Get an existing response plan by its name.
 
         Args:
@@ -697,7 +697,7 @@ class ActionModule(ActionBase):
     def _handle_present(
         self,
         conn_request: SplunkRequest,
-        existing: dict[str, Any] | None,
+        existing: Optional[dict[str, Any]],
         response_plan: dict[str, Any],
     ) -> bool:
         """Handle state=present operation.
@@ -742,7 +742,7 @@ class ActionModule(ActionBase):
     def _handle_absent(
         self,
         conn_request: SplunkRequest,
-        existing: dict[str, Any] | None,
+        existing: Optional[dict[str, Any]],
     ) -> None:
         """Handle state=absent operation.
 

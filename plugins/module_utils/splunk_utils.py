@@ -141,3 +141,19 @@ def is_uuid(value: str) -> bool:
         True if the string matches UUID format, False otherwise.
     """
     return bool(UUID_PATTERN.match(value))
+
+
+def get_api_config_from_args(args):
+    """Extract API configuration from task arguments.
+
+    Args:
+        args: Task arguments dictionary.
+
+    Returns:
+        Tuple of (namespace, user, app) with defaults applied.
+    """
+    return (
+        args.get("api_namespace", DEFAULT_API_NAMESPACE),
+        args.get("api_user", DEFAULT_API_USER),
+        args.get("api_app", DEFAULT_API_APP),
+    )

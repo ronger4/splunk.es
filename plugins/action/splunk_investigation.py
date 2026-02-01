@@ -21,7 +21,7 @@
 The action module for splunk_investigation
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
@@ -445,7 +445,7 @@ class ActionModule(ActionBase):
     def _filter_updatable_fields(
         self,
         investigation: dict[str, Any],
-    ) -> tuple[dict[str, Any], list[str] | None]:
+    ) -> tuple[dict[str, Any], Optional[list[str]]]:
         """Filter investigation params to only updatable fields.
 
         Args:
