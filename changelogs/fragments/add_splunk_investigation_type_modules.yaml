@@ -1,4 +1,0 @@
----
-minor_changes:
-  - Added splunk_investigation_type module to manage (create/update) Splunk Enterprise Security investigation types (incident types).
-  - Added splunk_investigation_type_info module to query information about Splunk Enterprise Security investigation types.

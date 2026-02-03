@@ -1,4 +1,0 @@
----
-minor_changes:
-  - Added splunk_response_plan module to manage (create/update/delete) Splunk Enterprise Security response plans.
-  - Added splunk_response_plan_info module to query information about Splunk Enterprise Security response plans.
