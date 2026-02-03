@@ -1,3 +1,0 @@
-minor_changes:
-  - splunk_notes - new module to manage notes for findings, investigations, and response plan tasks.
-  - splunk_notes_info - new module to query notes from findings, investigations, and response plan tasks.

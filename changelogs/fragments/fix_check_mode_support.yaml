@@ -1,2 +1,0 @@
-bugfixes:
-  - Implement check mode support in action plugins. Previously, check mode was declared as supported but API calls were still being made. Now all state-changing operations (merged, replaced, deleted) properly skip API calls when running in check mode.

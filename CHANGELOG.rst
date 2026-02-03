@@ -4,6 +4,53 @@ Splunk Enterprise Security Collection Release Notes
 
 .. contents:: Topics
 
+v5.1.0
+======
+
+Release Summary
+---------------
+
+Release summary for v5.1.0"
+
+Minor Changes
+-------------
+
+- Added ``limit`` parameter to splunk_finding_info, splunk_investigation_info, and splunk_response_plan_info modules to control the maximum number of results returned.
+- Added splunk_finding module to manage (create/update) Splunk Enterprise Security findings.
+- Added splunk_finding_info module to query information about Splunk Enterprise Security findings.
+- Added splunk_investigation module to manage (create/update) Splunk Enterprise Security investigations.
+- Added splunk_investigation_info module to query information about Splunk Enterprise Security investigations.
+- Added splunk_investigation_type module to manage (create/update) Splunk Enterprise Security investigation types (incident types).
+- Added splunk_investigation_type_info module to query information about Splunk Enterprise Security investigation types.
+- Added splunk_response_plan module to manage (create/update/delete) Splunk Enterprise Security response plans.
+- Added splunk_response_plan_execution module to apply/remove response plans to investigations and manage task statuses.
+- Added splunk_response_plan_execution_info module to query applied response plans and task statuses on investigations.
+- Added splunk_response_plan_info module to query information about Splunk Enterprise Security response plans.
+- Modernized Python code across the collection by removing Python 2 compatibility patterns (``from __future__ import`` and ``__metaclass__ = type``), updating to modern ``super()`` syntax, converting ``.format()`` calls to f-strings, and consolidating duplicated ``_check_argspec()`` methods into the shared ``check_argspec()`` helper.
+- splunk_notes - new module to manage notes for findings, investigations, and response plan tasks.
+- splunk_notes_info - new module to query notes from findings, investigations, and response plan tasks.
+
+Bugfixes
+--------
+
+- Implement check mode support in action plugins. Previously, check mode was declared as supported but API calls were still being made. Now all state-changing operations (merged, replaced, deleted) properly skip API calls when running in check mode.
+
+New Modules
+-----------
+
+- splunk_finding - Manage Splunk Enterprise Security findings
+- splunk_finding_info - Gather information about Splunk Enterprise Security Findings
+- splunk_investigation - Manage Splunk Enterprise Security investigations
+- splunk_investigation_info - Gather information about Splunk Enterprise Security Investigations
+- splunk_investigation_type - Manage Splunk Enterprise Security investigation types
+- splunk_investigation_type_info - Gather information about Splunk Enterprise Security investigation types
+- splunk_notes - Manage notes for findings, investigations, and response plan tasks
+- splunk_notes_info - Gather information about notes in Splunk Enterprise Security
+- splunk_response_plan - Manage Splunk Enterprise Security response plans
+- splunk_response_plan_execution - Apply response plans to investigations and manage tasks
+- splunk_response_plan_execution_info - Gather information about applied response plans on an investigation
+- splunk_response_plan_info - Gather information about Splunk Enterprise Security response plans
+
 v5.0.0
 ======
 
@@ -33,13 +80,13 @@ Breaking Changes / Porting Guide
 - correlation_search - Use splunk.es.splunk_correlation_searches instead
 - data_input_monitor - Use splunk.es.splunk_data_inputs_monitor instead
 - data_input_network - Use splunk.es.splunk_data_inputs_network instead
-- correlation_search_info module is deprecated. Use splunk.es.splunk_correlation_search_info instead.
 
 Removed Features (previously deprecated)
 ----------------------------------------
 
 - adaptive_response_notable_event module has been removed. Use splunk.es.splunk_adaptive_response_notable_events resource module instead.
 - correlation_search module has been removed. Use splunk.es.splunk_correlation_searches resource module instead.
+- correlation_search_info module has been removed. Use splunk.es.splunk_correlation_search_info instead.
 - data_input_monitor module has been removed. Use splunk.es.splunk_data_inputs_monitor resource module instead.
 - data_input_network module has been removed. Use splunk.es.splunk_data_inputs_network resource module instead.
 
