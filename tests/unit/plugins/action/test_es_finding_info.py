@@ -460,8 +460,8 @@ class TestSplunkFindingInfo:
         assert result["changed"] is False
         assert result.get("failed") is not True
         assert len(captured_params) > 0
-        # Time should be extracted from ref_id, not from user-provided params
-        assert captured_params[0].get("earliest") == "1768225865"
+        # Time should be extracted from ref_id (with 1s buffer), not from user-provided params
+        assert captured_params[0].get("earliest") == "1768225864"
         # latest should not be passed when querying by ref_id
         assert captured_params[0].get("latest") is None
 

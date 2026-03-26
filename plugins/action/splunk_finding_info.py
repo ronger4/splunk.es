@@ -16,7 +16,7 @@ from ansible.utils.display import Display
 from ansible_collections.splunk.es.plugins.module_utils.finding import (
     FINDING_KEY_TRANSFORM,
     build_finding_api_path,
-    extract_notable_time,
+    get_earliest_from_ref_id,
     map_finding_from_api,
 )
 from ansible_collections.splunk.es.plugins.module_utils.splunk import (
@@ -104,12 +104,11 @@ class ActionModule(ActionBase):
         """
         display.vv(f"splunk_finding_info: getting finding by ref_id: {ref_id}")
 
-        # Extract timestamp from ref_id to set earliest time filter
         query_params = {}
-        notable_time = extract_notable_time(ref_id)
-        if notable_time:
-            query_params["earliest"] = notable_time
-            display.vvv(f"splunk_finding_info: using earliest={notable_time} from ref_id")
+        earliest = get_earliest_from_ref_id(ref_id)
+        if earliest:
+            query_params["earliest"] = earliest
+            display.vvv(f"splunk_finding_info: using earliest={earliest} from ref_id")
 
         query_dict = conn_request.get_by_path(
             f"{self.api_object}/{quote(ref_id)}",
