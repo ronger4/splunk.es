@@ -35,6 +35,7 @@ from ansible_collections.splunk.es.plugins.module_utils.finding import (
     FINDING_KEY_TRANSFORM,
     build_finding_api_path,
     extract_notable_time,
+    get_earliest_from_ref_id,
     map_finding_from_api,
 )
 from ansible_collections.splunk.es.plugins.module_utils.splunk_utils import (
@@ -201,6 +202,55 @@ class TestExtractNotableTime:
         result = extract_notable_time(ref_id)
 
         assert result is None
+
+
+class TestGetEarliestFromRefId:
+    """Tests for the get_earliest_from_ref_id function.
+
+    This function extracts the notable time from a ref_id and applies a 1-second
+    buffer so the resulting 'earliest' value is guaranteed to include the finding
+    in Splunk time-range queries.
+    """
+
+    def test_get_earliest_from_ref_id_valid(self):
+        """Test that a valid ref_id returns the timestamp minus 1 second."""
+        ref_id = "2008e99d-af14-4fec-89da-b9b17a81820a@@notable@@time1768225865"
+        result = get_earliest_from_ref_id(ref_id)
+
+        assert result == "1768225864"
+
+    def test_get_earliest_from_ref_id_different_timestamp(self):
+        """Test with a different timestamp value."""
+        ref_id = "abc123@@notable@@time1000000000"
+        result = get_earliest_from_ref_id(ref_id)
+
+        assert result == "999999999"
+
+    def test_get_earliest_from_ref_id_empty_string(self):
+        """Test that empty ref_id returns None."""
+        result = get_earliest_from_ref_id("")
+
+        assert result is None
+
+    def test_get_earliest_from_ref_id_none(self):
+        """Test that None ref_id returns None."""
+        result = get_earliest_from_ref_id(None)
+
+        assert result is None
+
+    def test_get_earliest_from_ref_id_no_time(self):
+        """Test that ref_id without time component returns None."""
+        ref_id = "just-a-uuid-without-time"
+        result = get_earliest_from_ref_id(ref_id)
+
+        assert result is None
+
+    def test_get_earliest_from_ref_id_timestamp_1(self):
+        """Test boundary: timestamp of 1 returns '0'."""
+        ref_id = "abc@@notable@@time1"
+        result = get_earliest_from_ref_id(ref_id)
+
+        assert result == "0"
 
 
 class TestMapFindingFromApi:

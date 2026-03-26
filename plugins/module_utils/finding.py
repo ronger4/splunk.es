@@ -74,6 +74,31 @@ def extract_notable_time(ref_id: str) -> Optional[str]:
     return None
 
 
+# Buffer in seconds to subtract from notable_time when used as 'earliest'
+# in time-range queries. The Splunk API may treat 'earliest' as exclusive
+# or the finding's _time may have sub-second precision slightly before the
+# integer epoch in the ref_id, so a small buffer avoids missing the finding.
+_EARLIEST_BUFFER_SECONDS = 1
+
+
+def get_earliest_from_ref_id(ref_id: str) -> Optional[str]:
+    """Get a buffered earliest time suitable for Splunk time-range queries.
+
+    Extracts the notable time from the ref_id and subtracts a small buffer
+    to ensure the finding falls within the query's time range.
+
+    Args:
+        ref_id: The finding reference ID.
+
+    Returns:
+        The buffered earliest time as a string, or None if extraction fails.
+    """
+    notable_time = extract_notable_time(ref_id)
+    if notable_time is None:
+        return None
+    return str(int(notable_time) - _EARLIEST_BUFFER_SECONDS)
+
+
 def map_finding_from_api(
     config: dict[str, Any],
     key_transform: dict[str, str] = None,
