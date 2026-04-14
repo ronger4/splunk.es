@@ -200,8 +200,12 @@ class TestSplunkEsDataInputsMonitorRules:
         def get_by_path(self, path):
             return RESPONSE_PAYLOAD
 
+        def delete_by_path(self, path):
+            return {}
+
         monkeypatch.setattr(SplunkRequest, "create_update", create_update)
         monkeypatch.setattr(SplunkRequest, "get_by_path", get_by_path)
+        monkeypatch.setattr(SplunkRequest, "delete_by_path", delete_by_path)
 
         self._plugin._task.args = {
             "state": "replaced",
@@ -312,8 +316,12 @@ class TestSplunkEsDataInputsMonitorRules:
         def get_by_path(self, path):
             return RESPONSE_PAYLOAD
 
+        def delete_by_path(self, path):
+            return {}
+
         monkeypatch.setattr(SplunkRequest, "create_update", create_update)
         monkeypatch.setattr(SplunkRequest, "get_by_path", get_by_path)
+        monkeypatch.setattr(SplunkRequest, "delete_by_path", delete_by_path)
 
         self._plugin._task.args = {
             "state": "deleted",
