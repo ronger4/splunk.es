@@ -21,6 +21,7 @@
 The module file for data_inputs_monitor
 """
 
+from ansible.errors import AnsibleActionFail
 from ansible.module_utils.connection import Connection
 from ansible.module_utils.six.moves.urllib.parse import quote_plus
 from ansible.plugins.action import ActionBase
@@ -66,6 +67,14 @@ class ActionModule(ActionBase):
             "time-before-close": "time_before_close",  # not returned
             "whitelist": "whitelist",
         }
+
+    def fail_json(self, msg):
+        """Replace the AnsibleModule fail_json here for stable-2.16 compatibility
+        :param msg: The message for the failure
+        :type msg: str
+        """
+        msg = msg.replace("(basic.py)", self._task.action)
+        raise AnsibleActionFail(msg)
 
     def map_params_to_object(self, config):
         res = {}
